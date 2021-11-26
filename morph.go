@@ -17,6 +17,7 @@ import (
 	_ "github.com/go-morph/morph/drivers/postgres"
 
 	_ "github.com/go-morph/morph/sources/file"
+	_ "github.com/go-morph/morph/sources/go_bindata"
 )
 
 // DefaultLockTimeout sets the max time a database driver has to acquire a lock.
@@ -89,7 +90,7 @@ func NewWithDriverAndSource(driver drivers.Driver, source sources.Source, option
 }
 
 // ApplyAll applies all pending migrations.
-func (m *Morph) ApplyAll() error {
+func (m *Morph) ApplyAll(direction models.Direction) error {
 	appliedMigrations, err := m.driver.AppliedMigrations()
 	if err != nil {
 		return err
@@ -101,10 +102,16 @@ func (m *Morph) ApplyAll() error {
 	}
 
 	for _, migration := range sortMigrations(pendingMigrations) {
+		if migration.Direction != direction {
+			continue
+		}
+
 		start := time.Now()
 
 		m.config.Logger.Printf(InfoLoggerLight.Sprintf(migrationProgressStart+"\n", migration.Name))
 		if err := m.driver.Apply(migration); err != nil {
+			// failed to apply up migration try to run down script
+			// do not save the down script version
 			return err
 		}
 
@@ -115,11 +122,25 @@ func (m *Morph) ApplyAll() error {
 	return nil
 }
 
+func (m *Morph) Apply(migration *models.Migration) error {
+	start := time.Now()
+
+	m.config.Logger.Printf(InfoLoggerLight.Sprintf(migrationProgressStart+"\n", migration.Name))
+	if err := m.driver.Apply(migration); err != nil {
+		return err
+	}
+
+	elapsed := time.Since(start)
+	m.config.Logger.Printf(InfoLoggerLight.Sprintf(migrationProgressFinished+"\n", migration.Name, fmt.Sprintf("%.4fs", elapsed.Seconds())))
+
+	return nil
+}
+
 func sortMigrations(migrations []*models.Migration) []*models.Migration {
+	fmt.Println("sorting the shit")
 	sort.Slice(migrations, func(i, j int) bool {
 		return migrations[i].Name < migrations[j].Name
 	})
-
 	return migrations
 }
 

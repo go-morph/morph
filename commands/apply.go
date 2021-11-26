@@ -37,7 +37,7 @@ func UpApplyCmd() *cobra.Command {
 		Short:         "Apply migrations forward a number of steps",
 		RunE:          upApplyCmdF,
 		SilenceUsage:  true,
-		SilenceErrors: true,
+		SilenceErrors: false,
 	}
 }
 
@@ -57,16 +57,18 @@ func MigrateApplyCmd() *cobra.Command {
 		Short:         "Apply all migrations",
 		RunE:          migrateApplyCmdF,
 		SilenceUsage:  true,
-		SilenceErrors: true,
+		SilenceErrors: false,
 	}
 }
 
 func upApplyCmdF(cmd *cobra.Command, _ []string) error {
-	return apply.Up(cmd.Args)
+	_, err := apply.Up(0, cmd.Args)
+	return err
 }
 
 func downApplyCmdF(cmd *cobra.Command, _ []string) error {
-	return apply.Down(cmd.Args)
+	_, err := apply.Down(0, cmd.Args)
+	return err
 }
 
 func migrateApplyCmdF(cmd *cobra.Command, _ []string) error {

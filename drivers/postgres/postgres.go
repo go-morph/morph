@@ -17,7 +17,7 @@ import (
 var (
 	driverName    = "postgres"
 	defaultConfig = &Config{
-		MigrationsTable:        "schema_migrations",
+		MigrationsTable:        "db_migrations",
 		StatementTimeoutInSecs: 5,
 		MigrationMaxSize:       defaultMigrationMaxSize,
 	}
@@ -333,6 +333,8 @@ func (pg *postgres) Apply(migration *models.Migration) (err error) {
 		return err
 	}
 
+	// transaction rollback
+	// report the transcation fails
 	err = transaction.Commit()
 	if err != nil {
 		return &drivers.DatabaseError{
