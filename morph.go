@@ -71,9 +71,10 @@ func SetSatementTimeoutInSeconds(n int) EngineOption {
 	}
 }
 
-// WithLockKey creates a lock table in the database so that the migrations are
-// guaranteed to be executed from a single instance.
-func WithLockKey(ctx context.Context, key string) EngineOption {
+// WithLock creates a lock table in the database so that the migrations are
+// guaranteed to be executed from a single instance. The key is used for naming
+// the mutex.
+func WithLock(ctx context.Context, key string) EngineOption {
 	return func(m *Morph) {
 		m.config.LockKey = key
 		m.config.LockContext = ctx
@@ -107,10 +108,6 @@ func New(driver drivers.Driver, source sources.Source, options ...EngineOption) 
 		}
 		if err != nil {
 			return nil, err
-		}
-
-		if engine.config.LockContext == nil {
-			engine.config.LockContext = context.Background()
 		}
 
 		engine.mutex = mx
