@@ -50,8 +50,8 @@ func GenerateAdvisoryLockID(databaseName, schemaName string) (string, error) {
 	return fmt.Sprint(sum), nil
 }
 
-func (c *Config) GetContext() (context.Context, context.CancelFunc) {
-	if t := c.StatementTimeoutInSecs; t > 0 {
+func GetContext(timeoutInSeconds int) (context.Context, context.CancelFunc) {
+	if t := timeoutInSeconds; t > 0 {
 		return context.WithTimeout(context.Background(), time.Second*time.Duration(t))
 	}
 	return context.WithCancel(context.Background())

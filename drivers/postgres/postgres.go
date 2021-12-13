@@ -112,7 +112,7 @@ func Open(connURL string) (drivers.Driver, error) {
 func currentSchema(conn *sql.Conn, config *Config) (string, error) {
 	query := "SELECT CURRENT_SCHEMA()"
 
-	ctx, cancel := config.GetContext()
+	ctx, cancel := drivers.GetContext(config.StatementTimeoutInSecs)
 	defer cancel()
 
 	var schemaName string
@@ -168,14 +168,14 @@ func mergeConfigs(config, defaultConfig *Config) *Config {
 }
 
 func (pg *postgres) Ping() error {
-	ctx, cancel := pg.config.GetContext()
+	ctx, cancel := drivers.GetContext(pg.config.StatementTimeoutInSecs)
 	defer cancel()
 
 	return pg.conn.PingContext(ctx)
 }
 
 func (pg *postgres) createSchemaTableIfNotExists() (err error) {
-	ctx, cancel := pg.config.GetContext()
+	ctx, cancel := drivers.GetContext(pg.config.StatementTimeoutInSecs)
 	defer cancel()
 
 	createTableIfNotExistsQuery := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (version bigint not null primary key, name varchar not null)", pg.config.MigrationsTable)
@@ -234,7 +234,7 @@ func (pg *postgres) Lock() error {
 
 	// This will wait until the lock can be acquired or until the statement timeout has reached.
 	query := "SELECT pg_advisory_lock($1)"
-	ctx, cancel := pg.config.GetContext()
+	ctx, cancel := drivers.GetContext(pg.config.StatementTimeoutInSecs)
 	defer cancel()
 
 	if _, err := pg.conn.ExecContext(ctx, query, aid); err != nil {
@@ -257,7 +257,7 @@ func (pg *postgres) Unlock() error {
 	}
 
 	query := "SELECT pg_advisory_unlock($1)"
-	ctx, cancel := pg.config.GetContext()
+	ctx, cancel := drivers.GetContext(pg.config.StatementTimeoutInSecs)
 	defer cancel()
 
 	if _, err := pg.conn.ExecContext(ctx, query, aid); err != nil {
@@ -295,7 +295,7 @@ func (pg *postgres) Apply(migration *models.Migration, saveVersion bool) (err er
 	}
 	defer migration.Close()
 
-	ctx, cancel := pg.config.GetContext()
+	ctx, cancel := drivers.GetContext(pg.config.StatementTimeoutInSecs)
 	defer cancel()
 
 	transaction, err := pg.conn.BeginTx(ctx, nil)
@@ -356,7 +356,7 @@ func (pg *postgres) AppliedMigrations() (migrations []*models.Migration, err err
 	}
 
 	query := fmt.Sprintf("SELECT version, name FROM %s", pg.config.MigrationsTable)
-	ctx, cancel := pg.config.GetContext()
+	ctx, cancel := drivers.GetContext(pg.config.StatementTimeoutInSecs)
 	defer cancel()
 	var appliedMigrations []*models.Migration
 	var version uint32
@@ -427,7 +427,7 @@ func executeQuery(transaction *sql.Tx, query string) error {
 func currentDatabaseNameFromDB(conn *sql.Conn, config *Config) (string, error) {
 	query := "SELECT CURRENT_DATABASE()"
 
-	ctx, cancel := config.GetContext()
+	ctx, cancel := drivers.GetContext(config.StatementTimeoutInSecs)
 	defer cancel()
 
 	var databaseName string
