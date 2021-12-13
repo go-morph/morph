@@ -38,7 +38,6 @@ type Config struct {
 	Logger      Logger
 	LockTimeout time.Duration
 	LockKey     string
-	LockContext context.Context
 }
 
 type EngineOption func(*Morph)
@@ -74,15 +73,14 @@ func SetSatementTimeoutInSeconds(n int) EngineOption {
 // WithLock creates a lock table in the database so that the migrations are
 // guaranteed to be executed from a single instance. The key is used for naming
 // the mutex.
-func WithLock(ctx context.Context, key string) EngineOption {
+func WithLock(key string) EngineOption {
 	return func(m *Morph) {
 		m.config.LockKey = key
-		m.config.LockContext = ctx
 	}
 }
 
 // New creates a new instance of the migrations engine from an existing db instance and a migrations source.
-func New(driver drivers.Driver, source sources.Source, options ...EngineOption) (*Morph, error) {
+func New(ctx context.Context, driver drivers.Driver, source sources.Source, options ...EngineOption) (*Morph, error) {
 	engine := &Morph{
 		config: defaultConfig,
 		source: source,
@@ -111,7 +109,7 @@ func New(driver drivers.Driver, source sources.Source, options ...EngineOption) 
 		}
 
 		engine.mutex = mx
-		_ = mx.LockWithContext(engine.config.LockContext)
+		_ = mx.LockWithContext(ctx)
 	}
 
 	return engine, nil
