@@ -130,7 +130,7 @@ func (m *Morph) ApplyAll() error {
 	return err
 }
 
-// Applies limited number of migrations
+// Applies limited number of migrations upwards.
 func (m *Morph) Apply(limit int) (int, error) {
 	appliedMigrations, err := m.driver.AppliedMigrations()
 	if err != nil {
@@ -142,9 +142,14 @@ func (m *Morph) Apply(limit int) (int, error) {
 		return -1, err
 	}
 
-	migrations, _, err := findUpScripts(sortMigrations(pendingMigrations))
-	if err != nil {
-		return -1, err
+	migrations := make([]*models.Migration, 0)
+	sortedMigrations := sortMigrations(pendingMigrations)
+
+	for _, migration := range sortedMigrations {
+		if migration.Direction != models.Up {
+			continue
+		}
+		migrations = append(migrations, migration)
 	}
 
 	steps := limit
@@ -248,27 +253,6 @@ func computePendingMigrations(appliedMigrations []*models.Migration, sourceMigra
 	}
 
 	return pendingMigrations, nil
-}
-
-func findUpScripts(migrations []*models.Migration) ([]*models.Migration, map[string]*models.Migration, error) {
-	rollbackMigrations := make(map[string]*models.Migration)
-	toBeAppliedMigrations := make([]*models.Migration, 0)
-	for _, migration := range migrations {
-		if migration.Direction != models.Up {
-			rollbackMigrations[migration.Name] = migration
-			continue
-		}
-		toBeAppliedMigrations = append(toBeAppliedMigrations, migration)
-	}
-
-	for _, migration := range toBeAppliedMigrations {
-		_, ok := rollbackMigrations[migration.Name]
-		if !ok {
-			return nil, nil, fmt.Errorf("the rollback migration file for %s is missing", migration.RawName)
-		}
-	}
-
-	return toBeAppliedMigrations, rollbackMigrations, nil
 }
 
 func findDownScripts(appliedMigrations []*models.Migration, sourceMigrations []*models.Migration) (map[string]*models.Migration, error) {
