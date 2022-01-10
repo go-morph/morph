@@ -142,7 +142,7 @@ func (m *Morph) Apply(limit int) (int, error) {
 		return -1, err
 	}
 
-	migrations, rollbacks, err := findUpScripts(sortMigrations(pendingMigrations))
+	migrations, _, err := findUpScripts(sortMigrations(pendingMigrations))
 	if err != nil {
 		return -1, err
 	}
@@ -162,18 +162,6 @@ func (m *Morph) Apply(limit int) (int, error) {
 		migrationName := migrations[i].Name
 		m.config.Logger.Println(InfoLoggerLight.Sprint(formatProgress(fmt.Sprintf(migrationProgressStart, migrationName))))
 		if err := m.driver.Apply(migrations[i], true); err != nil {
-			rollback, ok := rollbacks[migrationName]
-			if ok {
-				m.config.Logger.Println(ErrorLoggerLight.Sprint(formatProgress(fmt.Sprintf("failed to apply %s, rolling back.", migrationName))))
-				m.config.Logger.Println(InfoLoggerLight.Sprint(formatProgress(fmt.Sprintf("trying to apply %s (%s)", rollback.Name, rollback.Direction))))
-
-				if err2 := m.driver.Apply(rollback, false); err2 != nil {
-					return applied, fmt.Errorf("could not rollback the migration %s: %w", migrationName, err)
-				}
-				m.config.Logger.Println(InfoLoggerLight.Sprint(formatProgress(fmt.Sprintf("rollback completed for %s. Aborting gracefully.", migrationName))))
-				return applied, err
-			}
-
 			return applied, err
 		}
 
