@@ -91,6 +91,7 @@ func (suite *PostgresTestSuite) TestOpen() {
 		connectedDriver, teardown := suite.InitializeDriver(testConnURL)
 		defer teardown()
 
+		defaultConfig := getDefaultConfig()
 		cfg := &Config{
 			Config: drivers.Config{
 				MigrationsTable:        defaultConfig.MigrationsTable,
@@ -141,6 +142,8 @@ func (suite *PostgresTestSuite) TestOpen() {
 }
 
 func (suite *PostgresTestSuite) TestCreateSchemaTableIfNotExists() {
+	defaultConfig := getDefaultConfig()
+
 	suite.T().Run("it errors when connection is missing", func(t *testing.T) {
 		driver := &postgres{}
 
@@ -236,6 +239,8 @@ func (suite *PostgresTestSuite) TestUnlock() {
 }
 
 func (suite *PostgresTestSuite) TestAppliedMigrations() {
+	defaultConfig := getDefaultConfig()
+
 	connectedDriver, teardown := suite.InitializeDriver(testConnURL)
 	defer teardown()
 
@@ -258,6 +263,8 @@ func (suite *PostgresTestSuite) TestAppliedMigrations() {
 }
 
 func (suite *PostgresTestSuite) TestApply() {
+	defaultConfig := getDefaultConfig()
+
 	testData := []struct {
 		Scenario                  string
 		PendingMigrations         []*models.Migration

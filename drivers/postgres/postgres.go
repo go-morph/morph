@@ -14,14 +14,7 @@ import (
 )
 
 var (
-	driverName    = "postgres"
-	defaultConfig = &Config{
-		Config: drivers.Config{
-			MigrationsTable:        "db_migrations",
-			StatementTimeoutInSecs: 60,
-			MigrationMaxSize:       defaultMigrationMaxSize,
-		},
-	}
+	driverName              = "postgres"
 	defaultMigrationMaxSize = 10 * 1 << 20 // 10 MB
 	configParams            = []string{
 		"x-migration-max-size",
@@ -44,7 +37,7 @@ type postgres struct {
 }
 
 func WithInstance(dbInstance *sql.DB, config *Config) (drivers.Driver, error) {
-	driverConfig := mergeConfigs(config, defaultConfig)
+	driverConfig := mergeConfigs(config, getDefaultConfig())
 
 	conn, err := dbInstance.Conn(context.Background())
 	if err != nil {
@@ -77,7 +70,7 @@ func Open(connURL string) (drivers.Driver, error) {
 		return nil, &drivers.AppError{Driver: driverName, OrigErr: err, Message: "failed to sanitize url from custom parameters"}
 	}
 
-	driverConfig, err := mergeConfigWithParams(customParams, defaultConfig)
+	driverConfig, err := mergeConfigWithParams(customParams, getDefaultConfig())
 	if err != nil {
 		return nil, &drivers.AppError{Driver: driverName, OrigErr: err, Message: "failed to merge custom params to driver config"}
 	}
@@ -130,35 +123,25 @@ func currentSchema(conn *sql.Conn, config *Config) (string, error) {
 
 func mergeConfigWithParams(params map[string]string, config *Config) (*Config, error) {
 	var err error
-	cfg := &Config{
-		Config: drivers.Config{
-			MigrationsTable:        config.MigrationsTable,
-			StatementTimeoutInSecs: config.StatementTimeoutInSecs,
-			MigrationMaxSize:       config.MigrationMaxSize,
-		},
-		databaseName:   config.databaseName,
-		schemaName:     config.schemaName,
-		closeDBonClose: config.closeDBonClose,
-	}
 
 	for _, configKey := range configParams {
 		if v, ok := params[configKey]; ok {
 			switch configKey {
 			case "x-migration-max-size":
-				if cfg.MigrationMaxSize, err = strconv.Atoi(v); err != nil {
+				if config.MigrationMaxSize, err = strconv.Atoi(v); err != nil {
 					return nil, errors.New(fmt.Sprintf("failed to cast config param %s of %s", configKey, v))
 				}
 			case "x-migrations-table":
-				cfg.MigrationsTable = v
+				config.MigrationsTable = v
 			case "x-statement-timeout":
-				if cfg.StatementTimeoutInSecs, err = strconv.Atoi(v); err != nil {
+				if config.StatementTimeoutInSecs, err = strconv.Atoi(v); err != nil {
 					return nil, errors.New(fmt.Sprintf("failed to cast config param %s of %s", configKey, v))
 				}
 			}
 		}
 	}
 
-	return cfg, nil
+	return config, nil
 }
 
 func mergeConfigs(config, defaultConfig *Config) *Config {

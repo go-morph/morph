@@ -98,6 +98,7 @@ func (suite *MysqlTestSuite) TestOpen() {
 		connectedDriver, teardown := suite.InitializeDriver(defaultConnURL)
 		defer teardown()
 
+		defaultConfig := getDefaultConfig()
 		cfg := &Config{
 			Config: drivers.Config{
 				MigrationsTable:        defaultConfig.MigrationsTable,
@@ -144,6 +145,8 @@ func (suite *MysqlTestSuite) TestOpen() {
 }
 
 func (suite *MysqlTestSuite) TestCreateSchemaTableIfNotExists() {
+	defaultConfig := getDefaultConfig()
+
 	suite.T().Run("it errors when connection is missing", func(t *testing.T) {
 		driver := &mysql{}
 
@@ -194,6 +197,8 @@ func (suite *MysqlTestSuite) TestCreateSchemaTableIfNotExists() {
 }
 
 func (suite *MysqlTestSuite) TestLock() {
+	defaultConfig := getDefaultConfig()
+
 	connectedDriver, teardown := suite.InitializeDriver(testConnURL)
 	defer teardown()
 
@@ -211,6 +216,8 @@ func (suite *MysqlTestSuite) TestLock() {
 }
 
 func (suite *MysqlTestSuite) TestUnlock() {
+	defaultConfig := getDefaultConfig()
+
 	connectedDriver, teardown := suite.InitializeDriver(testConnURL)
 	defer teardown()
 
@@ -230,6 +237,8 @@ func (suite *MysqlTestSuite) TestUnlock() {
 }
 
 func (suite *MysqlTestSuite) TestAppliedMigrations() {
+	defaultConfig := getDefaultConfig()
+
 	connectedDriver, teardown := suite.InitializeDriver(testConnURL)
 	defer teardown()
 
@@ -252,6 +261,8 @@ func (suite *MysqlTestSuite) TestAppliedMigrations() {
 }
 
 func (suite *MysqlTestSuite) TestApply() {
+	defaultConfig := getDefaultConfig()
+
 	testData := []struct {
 		Scenario                  string
 		PendingMigrations         []*models.Migration
