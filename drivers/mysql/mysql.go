@@ -69,7 +69,7 @@ func Open(connURL string) (drivers.Driver, error) {
 		return nil, &drivers.AppError{Driver: driverName, OrigErr: err, Message: "failed to sanitize url from custom parameters"}
 	}
 
-	driverConfig, err := mergeConfigWithParams(customParams, *defaultConfig)
+	driverConfig, err := mergeConfigWithParams(customParams, defaultConfig)
 	if err != nil {
 		return nil, &drivers.AppError{Driver: driverName, OrigErr: err, Message: "failed to merge custom params to driver config"}
 	}
@@ -368,27 +368,36 @@ func mergeConfigs(config *Config, defaultConfig *Config) *Config {
 	return config
 }
 
-func mergeConfigWithParams(params map[string]string, config Config) (*Config, error) {
+func mergeConfigWithParams(params map[string]string, config *Config) (*Config, error) {
 	var err error
+	cfg := &Config{
+		Config: drivers.Config{
+			MigrationsTable:        config.MigrationsTable,
+			StatementTimeoutInSecs: config.StatementTimeoutInSecs,
+			MigrationMaxSize:       config.MigrationMaxSize,
+		},
+		databaseName:   config.databaseName,
+		closeDBonClose: config.closeDBonClose,
+	}
 
 	for _, configKey := range configParams {
 		if v, ok := params[configKey]; ok {
 			switch configKey {
 			case "x-migration-max-size":
-				if config.MigrationMaxSize, err = strconv.Atoi(v); err != nil {
+				if cfg.MigrationMaxSize, err = strconv.Atoi(v); err != nil {
 					return nil, errors.New(fmt.Sprintf("failed to cast config param %s of %s", configKey, v))
 				}
 			case "x-migrations-table":
-				config.MigrationsTable = v
+				cfg.MigrationsTable = v
 			case "x-statement-timeout":
-				if config.StatementTimeoutInSecs, err = strconv.Atoi(v); err != nil {
+				if cfg.StatementTimeoutInSecs, err = strconv.Atoi(v); err != nil {
 					return nil, errors.New(fmt.Sprintf("failed to cast config param %s of %s", configKey, v))
 				}
 			}
 		}
 	}
 
-	return &config, nil
+	return cfg, nil
 }
 
 func (driver *mysql) addMigrationQuery(migration *models.Migration) string {
