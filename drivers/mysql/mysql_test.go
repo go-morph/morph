@@ -95,11 +95,19 @@ func (suite *MysqlTestSuite) TestOpen() {
 	})
 
 	suite.T().Run("when connURL is valid and bare uses default configuration", func(t *testing.T) {
-		connectedDriver, teardown := suite.InitializeDriver(testConnURL)
+		connectedDriver, teardown := suite.InitializeDriver(defaultConnURL)
 		defer teardown()
 
+		cfg := &Config{
+			Config: drivers.Config{
+				MigrationsTable:        defaultConfig.MigrationsTable,
+				StatementTimeoutInSecs: defaultConfig.StatementTimeoutInSecs,
+				MigrationMaxSize:       defaultConfig.MigrationMaxSize,
+			},
+			closeDBonClose: true, // we have created DB from DSN
+		}
 		mysqlDriver := connectedDriver.(*mysql)
-		suite.Assert().EqualValues(defaultConfig, mysqlDriver.config)
+		suite.Assert().EqualValues(cfg, mysqlDriver.config)
 	})
 
 	suite.T().Run("when connURL is valid can override migrations table", func(t *testing.T) {

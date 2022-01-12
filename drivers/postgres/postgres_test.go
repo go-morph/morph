@@ -91,8 +91,19 @@ func (suite *PostgresTestSuite) TestOpen() {
 		connectedDriver, teardown := suite.InitializeDriver(testConnURL)
 		defer teardown()
 
+		cfg := &Config{
+			Config: drivers.Config{
+				MigrationsTable:        defaultConfig.MigrationsTable,
+				StatementTimeoutInSecs: defaultConfig.StatementTimeoutInSecs,
+				MigrationMaxSize:       defaultConfig.MigrationMaxSize,
+			},
+			databaseName:   databaseName,
+			schemaName:     "public",
+			closeDBonClose: true, // we have created DB from DSN
+		}
+
 		pgDriver := connectedDriver.(*postgres)
-		suite.Assert().EqualValues(defaultConfig, pgDriver.config)
+		suite.Assert().EqualValues(cfg, pgDriver.config)
 	})
 
 	suite.T().Run("when connURL is valid can override migrations table", func(t *testing.T) {
