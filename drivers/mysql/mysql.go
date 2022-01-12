@@ -69,7 +69,7 @@ func Open(connURL string) (drivers.Driver, error) {
 		return nil, &drivers.AppError{Driver: driverName, OrigErr: err, Message: "failed to sanitize url from custom parameters"}
 	}
 
-	driverConfig, err := mergeConfigWithParams(customParams, defaultConfig)
+	driverConfig, err := mergeConfigWithParams(customParams, *defaultConfig)
 	if err != nil {
 		return nil, &drivers.AppError{Driver: driverName, OrigErr: err, Message: "failed to merge custom params to driver config"}
 	}
@@ -368,7 +368,7 @@ func mergeConfigs(config *Config, defaultConfig *Config) *Config {
 	return config
 }
 
-func mergeConfigWithParams(params map[string]string, config *Config) (*Config, error) {
+func mergeConfigWithParams(params map[string]string, config Config) (*Config, error) {
 	var err error
 
 	for _, configKey := range configParams {
@@ -388,7 +388,7 @@ func mergeConfigWithParams(params map[string]string, config *Config) (*Config, e
 		}
 	}
 
-	return config, nil
+	return &config, nil
 }
 
 func (driver *mysql) addMigrationQuery(migration *models.Migration) string {
