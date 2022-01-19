@@ -205,7 +205,7 @@ func (pg *postgres) CreateSchemaTableIfNotExists() (err error) {
 			OrigErr: err,
 			Driver:  driverName,
 			Message: "failed while executing query",
-			Command: "create_migrations_table_if_not_exists",
+			Command: "pg_create_migrations_table_if_not_exists",
 			Query:   []byte(createTableIfNotExistsQuery),
 		}
 	}
@@ -321,7 +321,7 @@ func (pg *postgres) Apply(migration *models.Migration) (err error) {
 			OrigErr: err,
 			Driver:  driverName,
 			Message: "error while opening a transaction to the database",
-			Command: "begin_transaction",
+			Command: "pg_begin_transaction",
 		}
 	}
 
@@ -339,7 +339,7 @@ func (pg *postgres) Apply(migration *models.Migration) (err error) {
 			OrigErr: err,
 			Driver:  driverName,
 			Message: "error while committing a transaction to the database",
-			Command: "commit_transaction",
+			Command: "pg_commit_transaction",
 		}
 	}
 
@@ -361,6 +361,7 @@ func (pg *postgres) AppliedMigrations() (migrations []*models.Migration, err err
 	query := fmt.Sprintf("SELECT version, name FROM %s", pg.config.MigrationsTable)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(pg.config.StatementTimeoutInSecs)*time.Second)
 	defer cancel()
+
 	var appliedMigrations []*models.Migration
 	var version uint32
 	var name string
@@ -371,7 +372,7 @@ func (pg *postgres) AppliedMigrations() (migrations []*models.Migration, err err
 			OrigErr: err,
 			Driver:  driverName,
 			Message: "failed to fetch applied migrations",
-			Command: "select_applied_migrations",
+			Command: "pg_select_applied_migrations",
 			Query:   []byte(query),
 		}
 	}
@@ -382,7 +383,7 @@ func (pg *postgres) AppliedMigrations() (migrations []*models.Migration, err err
 				OrigErr: err,
 				Driver:  driverName,
 				Message: "failed to scan applied migration row",
-				Command: "scan_applied_migrations",
+				Command: "pg_scan_applied_migrations",
 			}
 		}
 
