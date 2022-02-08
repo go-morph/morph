@@ -2,9 +2,11 @@ package drivers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"hash/crc32"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -20,6 +22,15 @@ func ExtractCustomParams(conn string, params []string) (map[string]string, error
 	}
 
 	return result, nil
+}
+
+func UnescapeUnicodeSequencesFromURL(conn string) (string, error) {
+	quoted := strconv.Quote(conn)
+	var unescaped string
+	if err := json.Unmarshal([]byte(quoted), &unescaped); err != nil {
+		return "", err
+	}
+	return unescaped, nil
 }
 
 func RemoveParamsFromURL(conn string, params []string) (string, error) {

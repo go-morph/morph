@@ -60,12 +60,17 @@ func WithInstance(dbInstance *sql.DB, config *Config) (drivers.Driver, error) {
 }
 
 func Open(connURL string) (drivers.Driver, error) {
-	customParams, err := drivers.ExtractCustomParams(connURL, configParams)
+	unescapedConnURL, err := drivers.UnescapeUnicodeSequencesFromURL(connURL)
+	if err != nil {
+		return nil, &drivers.AppError{Driver: driverName, OrigErr: err, Message: "failed to unescape unicode escape sequences from the url"}
+	}
+
+	customParams, err := drivers.ExtractCustomParams(unescapedConnURL, configParams)
 	if err != nil {
 		return nil, &drivers.AppError{Driver: driverName, OrigErr: err, Message: "failed to parse custom parameters from url"}
 	}
 
-	sanitizedConnURL, err := drivers.RemoveParamsFromURL(connURL, configParams)
+	sanitizedConnURL, err := drivers.RemoveParamsFromURL(unescapedConnURL, configParams)
 	if err != nil {
 		return nil, &drivers.AppError{Driver: driverName, OrigErr: err, Message: "failed to sanitize url from custom parameters"}
 	}
@@ -85,7 +90,7 @@ func Open(connURL string) (drivers.Driver, error) {
 		return nil, &drivers.DatabaseError{Driver: driverName, Command: "grabbing_connection", OrigErr: err, Message: "failed to grab connection to the database"}
 	}
 
-	if driverConfig.databaseName, err = extractDatabaseNameFromURL(connURL); err != nil {
+	if driverConfig.databaseName, err = extractDatabaseNameFromURL(unescapedConnURL); err != nil {
 		return nil, &drivers.AppError{Driver: driverName, OrigErr: err, Message: "failed to extract database name from connection url"}
 	}
 
