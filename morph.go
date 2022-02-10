@@ -108,7 +108,10 @@ func New(ctx context.Context, driver drivers.Driver, source sources.Source, opti
 		}
 
 		engine.mutex = mx
-		_ = mx.LockWithContext(ctx)
+		err = mx.LockWithContext(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return engine, nil
