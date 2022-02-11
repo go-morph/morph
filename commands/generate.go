@@ -57,7 +57,7 @@ func generateCmdF(cmd *cobra.Command, args []string) {
 			fileName = strings.Join([]string{date.Format(tf), fileName}, "_")
 		}
 	} else if seq, _ := cmd.Flags().GetBool("sequence"); seq {
-		next, err := sequelNumber(dir, extention)
+		next, err := sequelNumber(dir, extention, driver)
 		if err != nil {
 			cmd.PrintErrln(err)
 			return
@@ -90,8 +90,8 @@ func generateCmdF(cmd *cobra.Command, args []string) {
 	}
 }
 
-func sequelNumber(dir, extention string) (int, error) {
-	matches, err := filepath.Glob(filepath.Join(dir, "*"+extention))
+func sequelNumber(dir, extention, driver string) (int, error) {
+	matches, err := filepath.Glob(filepath.Join(dir, driver, "*"+extention))
 	if err != nil {
 		return 0, err
 	}
@@ -119,7 +119,7 @@ func sequelNumber(dir, extention string) (int, error) {
 
 func getExtension(driver string) string {
 	switch driver {
-	case "postgresql", "mysql":
+	case "postgres", "mysql":
 		return "sql"
 	default:
 		return "txt"
