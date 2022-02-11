@@ -80,7 +80,7 @@ func WithLock(key string) EngineOption {
 func New(ctx context.Context, driver drivers.Driver, source sources.Source, options ...EngineOption) (*Morph, error) {
 	engine := &Morph{
 		config: &Config{
-			Logger: log.New(os.Stderr, "", log.LstdFlags), // add default logger
+			Logger: newColorLogger(log.New(os.Stderr, "", log.LstdFlags)), // add default logger
 		},
 		source: source,
 		driver: driver,
