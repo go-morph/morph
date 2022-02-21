@@ -1,3 +1,5 @@
+## This project is now maintained under https://github.com/mattermost/morph therefore please consider updating your dependencies with the new repository. 
+
 ![](https://avatars.githubusercontent.com/u/80110794?s=200&v=4)
 
 
